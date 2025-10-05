@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bufio"
 	"flag"
 	"log"
 	"os"
@@ -25,19 +26,32 @@ func New(message string) IPromptService {
 func (s *promptService) DeployProcess() {
 
 	var flagMessage string
-
-	if len(os.Args) < 1 {
-		log.Print("Error: no flag")
-		os.Exit(0)
+	for _, v := range renderFlags() {
+		flag.StringVar(&flagMessage, v.Name, v.Description, v.Description)
+		flag.Parse()
 	}
 
-	if len(os.Args) > 1 && os.Args[1] == "-h" || os.Args[1] == "help" {
-		for _, v := range renderFlags() {
-			flag.StringVar(&flagMessage, v.Name, v.Description, v.Description)
-			flag.Parse()
+	if len(os.Args) > 1 {
+
+		if os.Args[1] == "-h" || os.Args[1] == "help" {
+			flag.Usage()
+			return
 		}
-		flag.Usage()
-		return
+
+		if os.Args[1] == "init" {
+			log.Println("Application initialized.")
+			log.Print("Please type a project name and press Enter:")
+			reader := bufio.NewReader(os.Stdin)
+			projectName, err := reader.ReadString('\n')
+			if err != nil {
+				log.Fatalf("Error reading input: %v", err)
+			}
+
+			log.Printf("Project name: %s \n", projectName)
+			os.Exit(0)
+
+		}
+
 	}
 
 }
