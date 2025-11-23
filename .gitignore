@@ -1,1 +1,4 @@
-DS_Store
+.DS_Store
+achi-layout-config.json
+achi-rootfile-config.json
+api-drive-config.json

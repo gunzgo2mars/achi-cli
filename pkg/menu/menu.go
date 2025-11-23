@@ -28,6 +28,9 @@ func clearScreen() {
 func draw() {
 	clearScreen()
 
+	log.Printf("===========================================\r\n")
+	log.Printf("⚔ Achilles - go project layout generator ⚔\r\n")
+	log.Printf("===========================================\r\n")
 	for index, value := range options {
 		if index == selectedIndex {
 			// ANSI escape codes for reverse video (highlighting)

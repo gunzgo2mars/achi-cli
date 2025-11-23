@@ -1,16 +1,23 @@
 package main
 
 import (
+	"context"
 	"log"
 
 	"github.com/gunzgo2mars/achi-cli/internal/core/service"
+	"github.com/gunzgo2mars/achi-cli/pkg/validatorz"
+
+	driveRepo "github.com/gunzgo2mars/achi-cli/internal/repository/drive"
 )
 
 func main() {
 
-	log.SetFlags(0)
+	ctx := context.Background()
+	validator := validatorz.New()
+	driveRepo := driveRepo.New(ctx, "/usr/local/bin/api-drive-config.json")
 
-	promptSvc := service.New("test")
+	log.SetFlags(0)
+	promptSvc := service.New(driveRepo, validator)
 	promptSvc.DeployProcess()
 
 }
