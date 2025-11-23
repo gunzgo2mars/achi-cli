@@ -1,12 +1,17 @@
 package service
 
 import (
-	"bufio"
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"regexp"
 
 	"github.com/gunzgo2mars/achi-cli/internal/core/model"
+	driveRepo "github.com/gunzgo2mars/achi-cli/internal/repository/drive"
+	"github.com/gunzgo2mars/achi-cli/pkg/menu"
+	"github.com/gunzgo2mars/achi-cli/pkg/validatorz"
+	"golang.org/x/term"
 )
 
 type IPromptService interface {
@@ -14,12 +19,17 @@ type IPromptService interface {
 }
 
 type promptService struct {
-	message string
+	driveRepo driveRepo.IDriveRepository
+	validator validatorz.IValidatorz
 }
 
-func New(message string) IPromptService {
+func New(
+	driveRepo driveRepo.IDriveRepository,
+	validator validatorz.IValidatorz,
+) IPromptService {
 	return &promptService{
-		message: message,
+		driveRepo: driveRepo,
+		validator: validator,
 	}
 }
 
@@ -33,23 +43,73 @@ func (s *promptService) DeployProcess() {
 
 	if len(os.Args) > 1 {
 
-		if os.Args[1] == "-h" || os.Args[1] == "help" {
+		// TODO: implement switch case condition
+
+		firstFlag := os.Args[1]
+
+		switch firstFlag {
+		case "help", "-h":
 			flag.Usage()
 			return
-		}
 
-		if os.Args[1] == "init" {
-			log.Println("Application initialized.")
-			log.Print("Please type a project name and press Enter:")
-			reader := bufio.NewReader(os.Stdin)
-			projectName, err := reader.ReadString('\n')
-			if err != nil {
-				log.Fatalf("Error reading input: %v", err)
+		case "init":
+
+			fd := int(os.Stdin.Fd())
+
+			if !term.IsTerminal(fd) {
+				log.Fatal("Application must be run in a proper terminal to use arrow-key selection.")
 			}
 
-			log.Printf("Project name: %s \n", projectName)
-			os.Exit(0)
+			previousTermState, err := term.MakeRaw(fd)
+			if err != nil {
+				log.Fatalf("Failed to put terminal into raw mode: %v", err)
+			}
 
+			defer term.Restore(fd, previousTermState)
+
+			choice, err := menu.HandleSelection(previousTermState, fd)
+			if err != nil {
+				log.Printf("Error: %s \n", err.Error())
+			}
+
+			var configLayoutData []model.MicroserviceLayout
+			var configRootFileData []model.MicroserviceRootFile
+			var serviceName string
+
+			fmt.Print("🏗️ service name: ")
+			fmt.Scanln(&serviceName)
+
+			serviceNameString := regexp.MustCompile(`\s`)
+			isBlankspace := serviceNameString.MatchString(serviceName)
+
+			if isBlankspace {
+				log.Fatalf("Error: service name must not cotains any blank space")
+			}
+
+			prog := menu.InitProgress("Creating...")
+
+			if err := s.driveRepo.LoadJsonFile("1nWslZeYjwa0oTFWiHl5u_1ISmcpFAxPR", &configLayoutData); err != nil {
+				log.Fatalf("Error: %s \n", err.Error())
+			}
+
+			if err := s.driveRepo.LoadJsonFile("130__8xGxFfbcRjgwwuiEoj4nJBZzWCIV", &configRootFileData); err != nil {
+				log.Fatalf("Error: %s \n", err.Error())
+			}
+
+			if choice.MID == 0 {
+
+				s.setupLayoutProcess(
+					serviceName,
+					configLayoutData,
+					configRootFileData,
+				)
+				prog.Done()
+				fmt.Println("\n Done!")
+			}
+
+		default:
+			flag.Usage()
+			return
 		}
 
 	}
@@ -59,7 +119,7 @@ func (s *promptService) DeployProcess() {
 func renderFlags() []model.FlagDetail {
 
 	return []model.FlagDetail{
-		{Name: "gitname", Description: "Ask for project github repository."},
+		{Name: "init", Description: "initializing go project layout and architecture"},
 	}
 
 }
