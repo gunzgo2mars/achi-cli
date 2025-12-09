@@ -107,6 +107,39 @@ func (s *promptService) DeployProcess() {
 				fmt.Println("\n Done!")
 			}
 
+		case "migration-create":
+
+			var migrationFileName string
+			fmt.Print("📚 migration file name: ")
+			fmt.Scanln(&migrationFileName)
+
+			migrationFileNameString := regexp.MustCompile(`\s`)
+			isBlankspace := migrationFileNameString.MatchString(migrationFileName)
+
+			if isBlankspace {
+				log.Fatalf("Error: migration file name must not cotains any blank space")
+			}
+
+			if err := s.CreateMigrationFile(migrationFileName); err != nil {
+				log.Fatalf("Error[migration:create]: %s", err.Error())
+			}
+
+		case "seeder-create":
+			var seederFileName string
+			fmt.Print("🌱 seeder file name: ")
+			fmt.Scanln(&seederFileName)
+
+			seederFileNameString := regexp.MustCompile(`\s`)
+			isBlankspace := seederFileNameString.MatchString(seederFileName)
+
+			if isBlankspace {
+				log.Fatalf("Error: migration file name must not cotains any blank space")
+			}
+
+			if err := s.CreateSeederFile(seederFileName); err != nil {
+				log.Fatalf("Error[seeder:create]: %s", err.Error())
+			}
+
 		default:
 			flag.Usage()
 			return
@@ -119,7 +152,9 @@ func (s *promptService) DeployProcess() {
 func renderFlags() []model.FlagDetail {
 
 	return []model.FlagDetail{
-		{Name: "init", Description: "initializing go project layout and architecture"},
+		{Name: "init", Description: "initializing go project layout and architecture."},
+		{Name: "migration-create", Description: "Create migration file under migrations directory."},
+		{Name: "seeder-create", Description: "Create seeder file under seeds directory."},
 	}
 
 }
