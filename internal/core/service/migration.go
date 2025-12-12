@@ -5,25 +5,26 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/gunzgo2mars/achi-cli/internal/constants"
 )
 
 func (s *promptService) CreateMigrationFile(fileName string) error {
 
 	fileName = strings.ToLower(fileName)
 
-	dir := "migrations"
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(constants.MIGRATION_DIR, os.ModePerm); err != nil {
 		return err
 	}
 
-	timestamp := time.Now().Format("20060102_150405")
+	timestamp := time.Now().Format("20060102150405")
 
-	upFile := fmt.Sprintf("%s/%s_%s.up.sql", dir, timestamp, fileName)
+	upFile := fmt.Sprintf("%s/%s_%s.up.sql", constants.MIGRATION_DIR, timestamp, fileName)
 	if err := createEmptyFile(upFile); err != nil {
 		return err
 	}
 
-	downFile := fmt.Sprintf("%s/%s_%s.down.sql", dir, timestamp, fileName)
+	downFile := fmt.Sprintf("%s/%s_%s.down.sql", constants.MIGRATION_DIR, timestamp, fileName)
 	if err := createEmptyFile(downFile); err != nil {
 		return err
 	}
@@ -40,14 +41,13 @@ func (s *promptService) CreateSeederFile(fileName string) error {
 
 	fileName = strings.ToLower(fileName)
 
-	dir := "seeds"
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(constants.SEEDER_DIR, os.ModePerm); err != nil {
 		return err
 	}
 
-	timestamp := time.Now().Format("20060102_150405")
+	timestamp := time.Now().Format("20060102150405")
 
-	seedFile := fmt.Sprintf("%s/%s_%s.sql", dir, timestamp, fileName)
+	seedFile := fmt.Sprintf("%s/%s_%s.sql", constants.SEEDER_DIR, timestamp, fileName)
 	if err := createEmptyFile(seedFile); err != nil {
 		return err
 	}
