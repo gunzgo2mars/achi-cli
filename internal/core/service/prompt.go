@@ -42,9 +42,6 @@ func (s *promptService) DeployProcess() {
 	}
 
 	if len(os.Args) > 1 {
-
-		// TODO: implement switch case condition
-
 		firstFlag := os.Args[1]
 
 		switch firstFlag {
@@ -138,6 +135,50 @@ func (s *promptService) DeployProcess() {
 
 			if err := s.CreateSeederFile(seederFileName); err != nil {
 				log.Fatalf("Error[seeder:create]: %s", err.Error())
+			}
+
+		case "test":
+			requireFlag := flag.NewFlagSet("test", flag.ExitOnError)
+
+			// test flag options
+			coverageFlag := requireFlag.Bool("coverage", false, "Enable coverage")
+			// tuiFlag := *requireFlag.Bool("tui", false, "Enable TUI Mode")
+
+			err := requireFlag.Parse(os.Args[2:])
+			if err != nil {
+				os.Exit(1)
+			}
+
+			fmt.Printf("Cover flag %v \n", *coverageFlag)
+
+			result := s.RunAllTests(&model.TestOpts{
+				CoverageFlag: *coverageFlag,
+			})
+
+			if result.Status == model.TestFail {
+				fmt.Println("✘ Tests failed")
+				if result.Failure != nil {
+					fmt.Printf("%s:%d\n%s\n",
+						result.Failure.File,
+						result.Failure.Line,
+						result.Failure.Message,
+					)
+				}
+			}
+
+			if result.Status == model.TestPass {
+				fmt.Println("✔ Tests passed")
+				fmt.Printf("✔ Time: %.2fs\n", result.Duration.Seconds())
+			}
+
+			if *coverageFlag {
+				cov, err := s.GetTotalCoverage()
+
+				if err != nil {
+					log.Fatalf("error: %s", err.Error())
+				}
+
+				fmt.Printf("✔ Coverage: %.1f%%\n", cov)
 			}
 
 		default:
